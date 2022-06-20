@@ -33,8 +33,10 @@ class TemperatureGrapher():
                     num_months=0
                 year=str(entry)[:4]
         return (dict_years)
-    def graph_data(self, data, dataColumn, uncertainty,uncertaintyColumn, type_data):    
-        data, uncertainty = self.group_by_year(data,dataColumn), self.group_by_year(uncertainty, uncertaintyColumn)
+
+
+    def graph_data(self, data, dataColumn,uncertaintyColumn, type_data):    
+        data, uncertainty = self.group_by_year(data,dataColumn), self.group_by_year(data, uncertaintyColumn)
         #The code below creating a linear regression line is from https://realpython.com/linear-regression-in-python/
         #Creating a dataframe from the yearly averages and formatting it properly. 
         all_centuries_df=DataFrame([data]) #Data is a dict of the average temperature each year.
@@ -92,7 +94,7 @@ class TemperatureGrapher():
         plt.show()
         print("The coefficient of determination is", r_sq)
         print ("The data above is from the", type_data,"data set.")
-        #This works properly because yerr, x, and y allcome from the same DataFrame. Consequently, they will be sorted in the same way and thus line up with each other.
+        #This works properly because yerr, x, and y all come from the same DataFrame. Consequently, they will be sorted in the same way and thus line up with each other.
 
 
     def group_by_century(self,df, type_place):
