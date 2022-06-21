@@ -8,36 +8,76 @@ from sklearn.linear_model import LinearRegression
 
 
 class TemperatureGrapher():
-    #This function groups the country data by year
-    def group_by_year(self, DF, column):  
+
+    def graph_map(self, data: DataFrame, century: int, row: int, col: int, heatAxs):
+        """
+        Creates a geographic map of the world, using a range of colors to highlight the heatdistribution.
+
+        Keyword arguments:
+        data -- The dataframe to use to make the map
+        century -- The century in which the data takes place
+        row -- Which row of subplots the map should be drawn on
+        col -- Which column of subplots the map should be drawn on
+        heatAxs -- Which axis to draw the plot on.
+        """
+        data = data[data["dt"].str.startswith(str(century), na=False)]
+        world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+        for line in data.groupby("Country"):
+            country = line[1]["Country"].iloc[0]
+            world.loc[world["name"] == country, "avgTemp"] = line[1]["AverageTemperature"].mean()
+        
+        world.plot(column = "avgTemp", edgecolor = "black", 
+            missing_kwds = {"color": "lightgray", "edgecolor": "black"}, 
+            cmap = "plasma", ax = heatAxs[row, col], legend = True)
+        heatAxs[row, col].tick_params(bottom = False, labelbottom = False, left = False, labelleft = False)
+        heatAxs[row, col].set_title(str(century) + "00s", fontdict = {"fontsize":15})
+
+    def group_by_year(self, data: DataFrame, column: str):  
+        """
+        Groups the country data by year
+
+        Keyword arguments:
+        data -- The dataframe to group
+        column -- Which column to base the grouping on
+        """
         year=None
         num_months=0  #This will track how many months of each year has data. 
         yearly_average_temp=0
         dict_years={}
         iloc=0
-        for entry in DF.index: #Iterates through each date.
+        for entry in data.index: #Iterates through each date.
             iloc+=1
             if year==None:
                 year=str(entry)[:4] 
-                yearly_average_temp+=DF.loc[entry][column] #Adds current year's temperature to the yearly_average_temp variable.
+                yearly_average_temp+=data.loc[entry][column] #Adds current year's temperature to the yearly_average_temp variable.
             elif str(entry)[:4]==year:
-                if not math.isnan(DF.loc[entry][column]): 
-                    yearly_average_temp+=DF.loc[entry][column]
+                if not math.isnan(data.loc[entry][column]): 
+                    yearly_average_temp+=data.loc[entry][column]
                     num_months+=1     
-            elif str(entry)[:4]!=year or iloc==len(DF): #If the function has encountered a new year or reached the end of the dataframe. 
+            elif str(entry)[:4]!=year or iloc==len(data): #If the function has encountered a new year or reached the end of the dataframe. 
                 if num_months !=0: #This checks if there were any entries in the current year. 
                     dict_years[year]=(yearly_average_temp/num_months) #Records the average temperature of the current year.
                 yearly_average_temp=0 
-                if not math.isnan(DF.loc[entry][column]): #If the first entry of the new year is not NaN, then the temperature will be recorded.
+                if not math.isnan(data.loc[entry][column]): #If the first entry of the new year is not NaN, then the temperature will be recorded.
                     num_months=1
-                    yearly_average_temp+=DF.loc[entry][column]
+                    yearly_average_temp+=data.loc[entry][column]
                 else:
                     num_months=0
                 year=str(entry)[:4]
         return (dict_years)
 
 
-    def graph_data(self, regionNames, data, tempAx, uncertainAx, row,col):    
+    def graph_change(self, regionNames: str, data: dict, tempAx, uncertainAx, row: int,col: int):    
+        """
+        Graphs the change in temperature/uncertainty over the years.
+
+        Keyword arguments:
+        data -- The dict used to make the map
+        row -- Which row of subplots the map should be drawn on
+        col -- Which column of subplots the map should be drawn on
+        tempAx -- Which temperature axis to draw the plot on.
+        uncertainAx -- Which uncertainty axis to draw the plot on.
+        """
         data, uncertainty = self.group_by_year(data,"AverageTemperature"), self.group_by_year(data, "AverageTemperatureUncertainty")
         #The code below creating a linear regression line is from https://realpython.com/linear-regression-in-python/
         #Creating a dataframe from the yearly averages and formatting it properly. 
@@ -98,20 +138,27 @@ class TemperatureGrapher():
         #This works properly because yerr, x, and y all come from the same DataFrame. Consequently, they will be sorted in the same way and thus line up with each other.
 
 
-    def group_by_century(self,df, type_place):
+    def group_by_century(self,data: DataFrame, type_place: str):
+        """
+        Groups the country data by century
+
+        Keyword arguments:
+        data -- The dataframe to group
+        type_place -- Which type of place is being showcased (e.g. cities, states, countries, etc.)
+        """
         curr_place=None
         century_began={1700:[], 1750:[],1800:[], 1850:[],1900:[], 1950:[],2000:[]} #Each place will be placed in a list depending on when it began recording temperatures.
         index=1
-        avg_temps=df.groupby(type_place).mean()
+        avg_temps=data.groupby(type_place).mean()
         avg_temps['AverageTemperature'] = avg_temps['AverageTemperature'].replace(np.nan, 0)
-        for column in df: #This loop will figure out the indeces of the "dt" column and the place name column. 
+        for column in data: #This loop will figure out the indeces of the "dt" column and the place name column. 
             if column=="dt":
                 dt_index=index
             elif column==type_place:
                 place_index=index
             index+=1
         index=0
-        for row in df.itertuples(): #This will iterate through each entry in the data frame. 
+        for row in data.itertuples(): #This will iterate through each entry in the data frame. 
             dt,place=row[dt_index],row[place_index]
             if curr_place==place: #If curr_place==place, then we are not at the place's first entry (when they began recording temperatures). We only need the first entry of each place.
                 continue
@@ -126,8 +173,19 @@ class TemperatureGrapher():
             index+=1
         return century_began
 
-    def highest_avg(self,df, type_place, row, col, axs):
-        century_began = self.group_by_century(df,type_place)
+    def highest_avg(self,data: DataFrame, type_place: str, row: int, col: int, axs):
+        """
+        Uses bar plots to showcase which regions of the world where hottest, starting at different times.
+
+        Keyword arguments:
+        data -- The dataframe to use to make the bar plots
+        century -- The century in which the data takes place
+        type_place -- Which type of place is being showcased (e.g. cities, states, countries, etc.)
+        row -- Which row of subplots the map should be drawn on
+        col -- Which column of subplots the map should be drawn on
+        axs -- Which axis to draw the plot on.
+        """
+        century_began = self.group_by_century(data,type_place)
         highest_places,highest_temps=[],[]
         for century in century_began:
             if len(century_began[century])>0:#If no areas began recording temperatures after a specific time period like 2000, the list would be empty.
