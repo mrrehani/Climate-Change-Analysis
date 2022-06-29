@@ -1,8 +1,8 @@
 # Climate Change Analysis
 ![Contributors](https://img.shields.io/badge/Contributors-Michael%20Rehani-brightgreen)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
-<a href="https://join.slack.com/t/ngc-goz8665/shared_invite/zt-r01kumfq-dQUT3c95BxEP_fnk4yJFfQ">
-<img alt="Join us on Slack">
+<a href="https://www.linkedin.com/in/michael-rehani/">
+<img alt="Connect with me on LinkedIn!">
 </a>
 
 ## Description
