@@ -1,5 +1,9 @@
 # Climate Change Analysis
 ![Contributors](https://img.shields.io/badge/Contributors-Michael%20Rehani-brightgreen)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
+<a href="https://join.slack.com/t/ngc-goz8665/shared_invite/zt-r01kumfq-dQUT3c95BxEP_fnk4yJFfQ">
+<img alt="Join us on Slack">
+</a>
 
 ## Description
 In this project, I explored the change in global temperature over the centuries. After cleaning the data, I created color-coded graphs with a line of best fit to visualize the increase in temperatures over the years. I also examined which areas were the warmest in different time periods, using both bar graphs and heat distribution maps.
